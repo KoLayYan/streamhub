@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; scrollbar-width: none; }
+                .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .logo-font { font-family: 'Bebas Neue', sans-serif; }
+        .gradient-text { background: linear-gradient(90deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .app-blur { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .is-blurred { filter: blur(8px); pointer-events: none; }
+        .glass-header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px); }
+        
+        /* Scroll ပို smooth ဖြစ်အောင် ပြင်ဆင်ထားခြင်း */
+.scroll-container { 
+    display: flex; 
+    overflow-x: auto; 
+    gap: 16px; 
+    padding: 10px 16px; 
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%; /* ဒါက အရေးကြီးပါတယ် - Container က full width ဖြစ်ရပါမယ် */
+}
+
+/* Movie card တွေကတော့ container ထဲမှာ အလျားလိုက် တန်းနေမှာပါ */
+.scroll-container .movie-card {
+    min-width: 120px;
+    width: 120px;
+}
+.scroll-container::-webkit-scrollbar { display: none; }
+
+.movie-card {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* အရေးကြီးတယ် - စာသားတွေကို အပြင်မထွက်အောင် လုပ်ထားတာပါ */
+}
+.movie-card img {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 4px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.movie-card h3 {
+    font-size: 11px !important;
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 4px;
+}
+.movie-card:hover { transform: scale(1.05); }
+        .movie-img { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+        
+        .marquee-container { overflow: hidden; white-space: nowrap; width: 100%; }
+        .marquee-text { display: inline-block; padding-left: 100%; animation: marquee 10s linear infinite; }
+@keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.gradient-text-animate {
+    /* ပိုတောက်တဲ့ အရောင် ၃ မျိုးကို သုံးထားပါတယ် */
+    background: linear-gradient(90deg, #3b82f6, #a855f7, #ec4899, #3b82f6);
+    background-size: 300% 100%; /* Gradient ပိုရှည်အောင် လုပ်ထားပါတယ် */
+    
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Animation ကို 2s နဲ့ ပိုမြန်အောင် ပြင်ထားပါတယ် */
+    animation: gradient-flow 2s linear infinite;
+    font-weight: 800;
+}
+        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+        @keyframes pulse-animation {
+    0% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.5); }
+    50% { transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.7); }
+    100% { transform: scale(1); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.5); }
+}
+        .watch-btn-effect {
+            animation: pulse-animation 1.2s infinite ease-in-out;
+            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            transition: all 0.3s ease;
+        }
+
+        .watch-btn-effect:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+            animation: none;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin 6s linear infinite;
+        }
+        @keyframes pulse-icon {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+.animate-icon {
+    animation: pulse-icon 2s infinite ease-in-out;
+}
+#search-results {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+#search-popup {
+    padding-top: 20px; /* Search Bar ကို အပေါ်ကနေ နည်းနည်း ရွှေ့ပေးခြင်း */
+}
+
+    </style>
+</head>
+<body>
+
+<header id="main-header" class="app-blur glass-header sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-sm rounded-2xl mx-4 mt-3">
+    <h1 class="text-2xl flex items-center gap-2 logo-font">
+        <i data-lucide="clapperboard" class="text-blue-500 animate-icon"></i> 
+        <span class="gradient-text-animate">STREAM HUB</span>
+    </h1>
+    
+    <button onclick="document.getElementById('search-popup').classList.remove('hidden')" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition">
+        <i data-lucide="search" class="w-5 h-5 text-slate-600"></i>
+    </button>
+</header>
+
+    <div id="search-popup" class="hidden fixed inset-0 bg-white z-[100] p-4 overflow-y-auto">
+    <div class="flex items-center gap-3 mb-6 sticky top-0 bg-white py-2 border-b border-slate-100">
+        <div class="flex-1 flex items-center bg-slate-100 rounded-full px-4 py-2">
+            <i data-lucide="search" class="w-5 h-5 text-slate-400"></i>
+            <input type="text" id="search-input" onkeyup="filterMovies()" 
+                   placeholder="Movie ရှာရန်..." 
+                   class="w-full bg-transparent outline-none ml-2 text-md">
+        </div>
+        <button onclick="document.getElementById('search-popup').classList.add('hidden')" 
+                class="p-2 hover:bg-slate-100 rounded-full">
+            <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
+        </button>
+    </div>
+    
+    <div id="search-results"></div>
+</div>
+
+    <div id="loading-spinner" class="flex flex-col justify-center items-center h-screen gap-4">
+    <div class="relative flex items-center justify-center">
+        <div class="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+        <i data-lucide="clapperboard" class="absolute w-8 h-8 text-blue-600"></i>
+    </div>
+    
+    <p class="text-slate-500 font-bold text-lg tracking-widest animate-pulse">
+        Fetching Data...
+    </p>
+</div>
+
+<main id="app-container" class="app-blur space-y-4 pt-4"></main>
+
+    <div id="modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4" onclick="closeModal()">
+        <div class="bg-white rounded-3xl p-5 max-w-sm w-full relative shadow-2xl transition-all duration-300" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute -top-3 -right-3 bg-white border border-slate-200 shadow-md p-2 rounded-xl hover:bg-slate-100 z-10 transition">
+                <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
+            </button>
+            <div class="flex gap-4">
+                <img id="modal-img" class="w-28 h-40 object-cover rounded-xl shadow-md">
+                <div class="flex flex-col flex-1 overflow-hidden">
+                    <div id="title-wrapper" class="bg-slate-100 p-2 rounded-lg font-bold text-md mb-2 marquee-container">
+                        <div id="modal-title-container"></div>
+                    </div>
+                    <div id="modal-genres" class="flex flex-row gap-2 mt-2 overflow-x-auto whitespace-nowrap scrollbar-hide"></div>
+                    <div class="mt-auto flex items-center gap-3 text-xs text-slate-500 font-medium">
+                        <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-500"></i> <span id="modal-date"></span></span>
+                        <span class="flex items-center gap-1"><i data-lucide="star" class="w-3.5 h-3.5 text-amber-500"></i> <span id="modal-rating"></span></span>
+                    </div>
+                </div>
+            </div>
+            <a id="watch-btn" href="#" target="_blank" 
+   class="watch-btn-effect w-full flex items-center justify-center gap-2 text-white py-3 rounded-2xl font-bold mt-5 shadow-lg shadow-blue-500/50">
+    <i data-lucide="play-circle" class="w-5 h-5 animate-spin-slow"></i>
+    Watch Now
+</a>
+
+            <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl mt-4 border border-slate-100">
+    <div class="flex items-center gap-2">
+        <i data-lucide="book-open" class="w-4 h-4 text-blue-600"></i>
+        <span class="text-xs font-bold text-slate-700">Storyline</span>
+    </div>
+    <button onclick="translateStory()" class="p-1.5 hover:bg-white rounded-lg transition-all shadow-sm">
+        <i data-lucide="languages" class="w-4 h-4 text-slate-600"></i>
+    </button>
+</div>
+
+<p id="modal-desc" class="text-xs text-slate-500 mt-2 text-justify leading-relaxed"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+        });
+        const db = getDatabase(initializeApp({ databaseURL: "https://my-movie-app-f3774-default-rtdb.firebaseio.com" }));
+        let allMovies = {};
+let originalStory = "";
+let genrePagination = {}; // ဒီတစ်ကြောင်း ထည့်ပေးပါ
+
+        
+        const genreIcons = { 
+    'Drama': { icon: 'megaphone', color: 'bg-red-500' },
+    'Comedy': { icon: 'laugh', color: 'bg-yellow-500' },
+    'Action': { icon: 'zap', color: 'bg-orange-500' },
+    'Sci-Fi': { icon: 'rocket', color: 'bg-purple-500' },
+    'Romance': { icon: 'heart', color: 'bg-pink-500' },
+    'Adventure': { icon: 'compass', color: 'bg-green-500' },
+    'Family': { icon: 'users', color: 'bg-teal-500' },
+    'Thriller': { icon: 'eye', color: 'bg-indigo-500' },
+    'Fantasy': { icon: 'sparkles', color: 'bg-violet-500' },
+    'Horror': { icon: 'ghost', color: 'bg-gray-700' },
+    'War': { icon: 'swords', color: 'bg-red-700' },
+    'Crime': { icon: 'fingerprint', color: 'bg-slate-800' },
+    'Mystery': { icon: 'search', color: 'bg-blue-600' },
+    'Documentary': { icon: 'camera', color: 'bg-emerald-600' },
+    'Musical': { icon: 'music', color: 'bg-rose-500' },
+    'History': { icon: 'scroll', color: 'bg-amber-700' },
+    'Sports': { icon: 'trophy', color: 'bg-yellow-600' },
+    'Western': { icon: 'sunset', color: 'bg-orange-600' },
+    'TV Movie': { icon: 'tv', color: 'bg-sky-600' },
+    'Adult': { icon: 'eye-off', color: 'bg-slate-900' },
+    'Animation': { icon: 'wand-2', color: 'bg-fuchsia-500' }
+};
+const getGenreMetadata = (genre) => {
+    // ၁။ ကြိုတင်သတ်မှတ်ထားတဲ့ list ထဲမှာရှိရင် အဲ့ဒါကိုပဲသုံး
+    if (genreIcons[genre]) {
+        return genreIcons[genre];
+    }
+
+    // ၂။ ရရှိနိုင်တဲ့ အရောင်များစာရင်း
+    const allColors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500', 'bg-slate-900', 'bg-orange-500', 'bg-emerald-500'];
+    
+    // ၃။ လက်ရှိသုံးထားပြီးသား အရောင်တွေကို စုစည်းခြင်း
+    const usedColors = Object.values(genreIcons).map(g => g.color);
+    
+    // ၄။ မသုံးရသေးတဲ့ အရောင်တွေကို ရှာဖွေခြင်း
+    const availableColors = allColors.filter(color => !usedColors.includes(color));
+    
+    // ၅။ အကယ်၍ အရောင်ကုန်သွားရင် (အားလုံးသုံးပြီးရင်) random ပြန်ယူမယ်၊ မကုန်သေးရင် available ထဲကယူမယ်
+    const selectedColor = availableColors.length > 0 
+        ? availableColors[Math.floor(Math.random() * availableColors.length)] 
+        : allColors[Math.floor(Math.random() * allColors.length)];
+    
+    // ၆။ အသစ်ရလာတဲ့အရောင်ကို genreIcons ထဲကို ခဏသိမ်းထားမယ် (နောက်ထပ် Genre အသစ်ထပ်တိုးရင် ဒီအရောင်ကို မယူမိအောင်)
+    genreIcons[genre] = { icon: 'tag', color: selectedColor };
+    
+    return genreIcons[genre];
+};
+        window.closeModal = () => {
+    // ၁။ Modal ကို ပိတ်မယ်
+    document.getElementById('modal').classList.add('hidden');
+    document.getElementById('app-container').classList.remove('is-blurred');
+    document.getElementById('main-header').classList.remove('is-blurred');
+
+    // ၂။ Translate Icon ကို အဖြူရောင် (default) အခြေအနေသို့ ပြန်ပြောင်းမယ်
+    const iconElement = document.querySelector('[data-lucide="languages"]');
+    if (iconElement) {
+        iconElement.classList.remove('text-green-600');
+        iconElement.classList.add('text-slate-600');
+    }
+
+    // ၃။ Description ကို မူလ English စာသားသို့ ပြန်ပြောင်းမယ်
+    const descElement = document.getElementById('modal-desc');
+    if (descElement && originalStory) {
+        descElement.innerText = originalStory;
+    }
+};
+        window.openModal = (id) => {
+    const m = allMovies[id];
+    originalStory = m.desc;
+    const titleContainer = document.getElementById('modal-title-container');
+    titleContainer.innerHTML = m.title.length > 15 ? `<span class="marquee-text">${m.title} &nbsp;&nbsp;&nbsp;</span>` : m.title;
+    
+    document.getElementById('modal-img').src = m.imageUrl;
+    document.getElementById('modal-date').innerText = m.releaseDate;
+    document.getElementById('modal-rating').innerText = m.rating;
+    document.getElementById('modal-desc').innerText = m.desc;
+    document.getElementById('watch-btn').href = m.movieLink;
+
+    // ဒီနေရာကို ပြင်လိုက်တာပါ
+    document.getElementById('modal-genres').innerHTML = m.genre.split(',').map(g => {
+    const genreName = g.trim();
+    const genreData = genreIcons[genreName] || { color: 'bg-slate-400' };
+    
+    // ဒီမှာ padding ကို px-2 py-0.5 လို့ ပြင်လိုက်ပါ (အရင်ကထက် သေးသွားပါမယ်)
+    return `<span class="${genreData.color} text-white text-[10px] px-2 py-0.5 rounded-full font-bold inline-block whitespace-nowrap">${genreName}</span>`;
+}).join('');
+
+    document.getElementById('modal').classList.remove('hidden');
+    document.getElementById('app-container').classList.add('is-blurred');
+    document.getElementById('main-header').classList.add('is-blurred');
+    lucide.createIcons();
+};
+
+        window.filterMovies = () => {
+    const query = document.getElementById('search-input').value.toLowerCase();
+    const resultsDiv = document.getElementById('search-results');
+    resultsDiv.innerHTML = ''; 
+    
+    if(query === "") return;
+
+    // အရေးကြီး: allMovies object ထဲကနေ data ကို loop ပတ်ပါ
+    Object.entries(allMovies).forEach(([id, m]) => {
+        if(m.title.toLowerCase().includes(query)) {
+            resultsDiv.innerHTML += `
+                <div class="movie-card" onclick="openModal('${id}'); document.getElementById('search-popup').classList.add('hidden')">
+                    <img src="${m.imageUrl}" class="movie-img">
+                    <h3 class="text-[11px] font-bold text-slate-800 truncate mt-1">${m.title}</h3>
+                    <div class="flex items-center justify-between mt-1 px-0.5">
+                        <span class="text-[9px] text-slate-500 font-bold flex items-center gap-0.5">
+                            <i data-lucide="calendar" class="w-2.5 h-2.5"></i> ${m.releaseDate ? m.releaseDate.split('-')[0] : 'N/A'}
+                        </span>
+                        <span class="text-[9px] text-amber-500 font-bold flex items-center gap-0.5">
+                            <i data-lucide="star" class="w-2.5 h-2.5"></i> ${m.rating}
+                        </span>
+                    </div>
+                </div>`;
+        }
+    });
+
+    // အရေးကြီးဆုံးက ဒီနေရာမှာ Icon အသစ်တွေကို ပြန် render ခိုင်းတာပါ
+    lucide.createIcons(); 
+};
+
+window.translateStory = async () => {
+    const descElement = document.getElementById('modal-desc');
+    const iconElement = document.querySelector('[data-lucide="languages"]');
+    const btnContainer = iconElement.parentElement; // Icon ပါတဲ့ button ကို ရယူခြင်း
+
+    // အကယ်၍ အရင်ဆုံး translate လုပ်ထားပြီးသားဆိုရင် (ပြန်ပြောင်းမယ်)
+    if (descElement.innerText !== originalStory) {
+        descElement.innerText = originalStory;
+        
+        // Icon အရောင်ကို မူလအတိုင်း ပြန်ပြောင်း (text-slate-600)
+        iconElement.classList.remove('text-green-600');
+        iconElement.classList.add('text-slate-600');
+        return;
+    }
+
+    descElement.innerText = "ဘာသာပြန်နေသည်..."; 
+
+    try {
+        const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(originalStory)}&langpair=en|my`);
+        const data = await response.json();
+        
+        if (data.responseData.translatedText) {
+            descElement.innerText = data.responseData.translatedText;
+            
+            // Translate ပြီးရင် Icon အရောင်ကို အစိမ်းရောင် (text-green-600) ပြောင်းမယ်
+            iconElement.classList.remove('text-slate-600');
+            iconElement.classList.add('text-green-600');
+        } else {
+            descElement.innerText = "ဘာသာပြန်၍မရပါ။";
+        }
+    } catch (error) {
+        descElement.innerText = "Error ဖြစ်နေပါတယ်...";
+    }
+};
+
+        // အပေါ်မှာ ဒီ variable လေး ထည့်ထားပါ
+let mainTabs = ['All', 'Action', 'Drama']; 
+
+onValue(ref(db, 'movies'), (snapshot) => {
+    const loader = document.getElementById('loading-spinner');
+    const container = document.getElementById('app-container');
+
+    if (snapshot.exists()) {
+        loader.classList.add('hidden');
+        allMovies = snapshot.val();
+        let movieArray = Object.keys(allMovies).map(id => ({ id, ...allMovies[id] }));
+        movieArray.sort((a, b) => b.id.localeCompare(a.id)); 
+                const genreMap = {};
+        genreMap['All'] = movieArray;
+        genrePagination['All'] = 15; // All အတွက် ပထမဆုံး 15 ခုပြဖို့ သတ်မှတ်
+
+        movieArray.forEach(m => {
+            m.genre.split(',').forEach(g => {
+                const genre = g.trim();
+                if (!genreMap[genre]) genreMap[genre] = [];
+                genreMap[genre].push(m);
+                if (!genrePagination[genre]) genrePagination[genre] = 15;
+            });
+        });
+
+                        // Tab တည်ဆောက်ခြင်း အပိုင်း
+let tabButtons = `<div class="flex items-center gap-2 px-4 pb-4 overflow-x-auto scrollbar-hide">`;
+
+// "All" နှင့် mainTabs ထဲက Genre များကို render လုပ်မယ်
+mainTabs.forEach((genre) => {
+    // ဤနေရာတွင် Icon ကို ဆွဲယူပါ
+    const genreData = genre === 'All' ? { icon: 'grid', color: 'bg-blue-600' } : getGenreMetadata(genre);
+    
+    tabButtons += `
+        <button onclick="switchTab('${genre}', '${genreData.color}')" id="tab-btn-${genre}" 
+                data-color="${genreData.color}"
+                class="flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-xs whitespace-nowrap ${genre === 'All' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600'} transition-all">
+            <i data-lucide="${genreData.icon}" class="w-3.5 h-3.5"></i>
+            ${genre}
+        </button>`;
+});
+
+
+        // ကျန်တဲ့ Genre တွေအတွက် More Dropdown
+        const otherGenres = Object.keys(genreMap).filter(g => !mainTabs.includes(g));
+        if (otherGenres.length > 0) {
+            tabButtons += `
+                <select onchange="switchTab(this.value, 'bg-blue-600')" class="px-4 py-2 rounded-full font-bold text-xs bg-slate-100 text-slate-600 border border-slate-200 outline-none">
+                    <option value="" disabled selected>More</option>
+                    ${otherGenres.map(g => `<option value="${g}">${g}</option>`).join('')}
+                </select>`;
+        }
+        tabButtons += `</div>`;
+
+                // Tab Contents များ တည်ဆောက်ခြင်း
+        let tabContents = ``;
+        Object.keys(genreMap).forEach((genre) => {
+            const isActive = (genre === 'All');
+            const movies = genreMap[genre];
+            const initialMovies = movies.slice(0, 15);
+            
+            tabContents += `
+                <div id="tab-content-${genre}" class="${isActive ? 'block' : 'hidden'} p-4">
+                    <div id="grid-${genre}" class="grid grid-cols-3 gap-3">
+                        ${initialMovies.map(m => renderMovieCard(m)).join('')}
+                    </div>
+                    ${movies.length > 15 ? `
+                        <button id="load-more-${genre}" onclick="loadMore('${genre}')" class="w-full mt-4 py-2 bg-slate-200 rounded-lg text-xs font-bold text-slate-600">
+                            Load More
+                        </button>` : ''}
+                </div>`;
+        });
+
+        container.innerHTML = tabButtons + tabContents;
+
+        // Load More Function
+        window.loadMore = (genre) => {
+            let currentIdx = genrePagination[genre];
+            const movies = genreMap[genre];
+            const nextBatch = movies.slice(currentIdx, currentIdx + 15);
+            
+            const grid = document.getElementById(`grid-${genre}`);
+            nextBatch.forEach(m => {
+                grid.insertAdjacentHTML('beforeend', renderMovieCard(m));
+            });
+            
+            genrePagination[genre] += 15;
+            if (genrePagination[genre] >= movies.length) {
+                document.getElementById(`load-more-${genre}`).style.display = 'none';
+            }
+            lucide.createIcons();
+        };
+
+        // Helper function (Card လေးတွေကို ဆောက်ပေးမယ့် code)
+        function renderMovieCard(m) {
+            return `
+                <div class="movie-card" onclick="openModal('${m.id}')">
+                    <img src="${m.imageUrl}" class="movie-img">
+                    <h3 class="text-[11px] font-bold text-slate-800 truncate mt-1">${m.title}</h3>
+                    <div class="flex items-center justify-between mt-1 px-0.5">
+                        <span class="text-[9px] text-slate-500 font-bold flex items-center gap-0.5">
+                            <i data-lucide="calendar" class="w-2.5 h-2.5"></i> ${m.releaseDate ? m.releaseDate.split('-')[0] : 'N/A'}
+                        </span>
+                        <span class="text-[9px] text-amber-500 font-bold flex items-center gap-0.5">
+                            <i data-lucide="star" class="w-2.5 h-2.5"></i> ${m.rating}
+                        </span>
+                    </div>
+                </div>`;
+        }
+
+        // switchTab function ကို onValue အပြင်မှာ ဒီလိုပြင်ရေးပါ
+window.switchTab = (selectedGenre, colorClass) => {
+    document.querySelectorAll('[id^="tab-content-"]').forEach(el => el.classList.add('hidden'));
+    const targetContent = document.getElementById(`tab-content-${selectedGenre}`);
+    if (targetContent) targetContent.classList.remove('hidden');
+
+    document.querySelectorAll('[id^="tab-btn-"]').forEach(btn => {
+        const btnColor = btn.getAttribute('data-color');
+        if(btnColor) btn.classList.remove(btnColor, 'text-white');
+        btn.classList.add('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+    });
+
+    const btn = document.getElementById(`tab-btn-${selectedGenre}`);
+    if (btn) {
+        btn.classList.remove('bg-white', 'border', 'border-slate-200', 'text-slate-600');
+        btn.classList.add(colorClass, 'text-white');
+    }
+};
+        lucide.createIcons();
+    } else {
+        loader.innerText = "Data မရှိသေးပါ";
+    }
+});
+</script>
+<script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker Registered!'))
+            .catch(err => console.log('Service Worker Failed!', err));
+        });
+      }
+    </script>
+
+</body>
+</html>
